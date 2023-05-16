@@ -1,7 +1,8 @@
-import createExpressServer from "./app"
+import createExpressServer from "./app/app"
 import * as dotenv from "dotenv"
 import forumRouter from "./forum"
 import authRouter from "./auth"
+import { Request, Response } from "express"
 
 dotenv.config()
 
@@ -10,7 +11,7 @@ const PORT = process.env.PORT
 
 export const app = createExpressServer()
 
-app.get("/", (req, res) => {
+app.get("/", (req: Request, res: Response) => {
     res.sendStatus(200)
 })
 

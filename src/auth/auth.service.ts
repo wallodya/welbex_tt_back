@@ -10,5 +10,5 @@ export const signUp = (req: Request, res: Response) => {
 
 export const signOut = (req: Request, res: Response) => {
     res.send("sign-out")
-    
+  
 }

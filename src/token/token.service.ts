@@ -1,4 +1,3 @@
-import { Person } from "@prisma/client"
 import { UserPublic } from "../types/types"
 import { Response } from "express"
 
@@ -23,5 +22,5 @@ export const validateAccessToken = (token: string) => {
 }
 
 export const validateRefreshToken = async (token: string) => {
-    
+
 }

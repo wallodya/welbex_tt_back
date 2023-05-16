@@ -4,7 +4,7 @@ export const getMessages = (req: Request, res: Response) => {
     res.send("all messages")
 }
 
-export const getMessagesAomount = (req: Request, res: Response) => {
+export const getMessagesAmount = (req: Request, res: Response) => {
     res.send("message count")
 }
 
