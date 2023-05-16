@@ -1,0 +1,33 @@
+version: '3.0'
+services:
+
+  app_dev:
+    image: wallodya/welbex_tt_back
+    labels:
+      - com.docker.compose.container-number=1
+    build: 
+      context: .
+      dockerfile: Dockerfile
+      target: app_dev
+    volumes:
+      - ./:/var/www/app
+    ports:
+      - "5000:3000"
+    depends_on:
+      - psql
+    env_file:
+      - .env
+
+  psql:
+    image: postgres:15
+    labels:
+      - com.docker.compose.container-number=2
+    env_file:
+      - .env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/create_tables.sql
+    restart: always
+
+volumes:
+  pgdata:

@@ -1,0 +1,46 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Person {
+  user_id Int @id @default(autoincrement())
+
+  uuid     String @unique
+  email    String @unique
+  login    String
+  password String
+
+  tokens   Token[]   @relation("user_has_tokens")
+  messages Message[] @relation("user_has_messages")
+
+  createdAt BigInt
+}
+
+model Token {
+  token_id Int @id @default(autoincrement())
+
+  refresh_token String @unique
+  user          Person @relation(fields: [userId], references: [user_id], name: "user_has_tokens", onDelete: Cascade)
+  userId        Int
+
+  createdAt BigInt
+}
+
+model Message {
+  message_id Int @id @default(autoincrement())
+
+  author   Person  @relation(fields: [userId], references: [user_id], name: "user_has_messages", onDelete: Cascade)
+  userId   Int
+  text     String?
+  mediaURL String?
+
+  createdAt BigInt
+}
