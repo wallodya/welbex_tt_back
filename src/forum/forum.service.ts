@@ -5,8 +5,48 @@ import { postSchema, updatePostSchema } from "./post.schema"
 import { randomUUID } from "crypto"
 import { string } from "zod"
 
-export const getMessages = (req: Request, res: Response) => {
-    res.send("all messages")
+const ITEMS_PER_PAGE = 20
+
+export const getMessages = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        let page = Number(req.query.page)
+
+        if (isNaN(page)) {
+            page = 0
+        }
+        
+        const skip = page * ITEMS_PER_PAGE
+        const take = ITEMS_PER_PAGE
+
+        const posts = await prisma.message.findMany({
+            skip,
+            take,
+            orderBy: {
+                createdAt: "asc"
+            },
+            select: {
+                uniqueMessageId: true,
+                text: true,
+                mediaURL: true,
+                createdAt: true,
+                author: {
+                    select: {
+                        uuid: true
+                    }
+                }
+            }
+        })
+
+        res.json(
+			posts.map(post => ({
+				...post,
+				author: post.author.uuid,
+				createdAt: Number(post.createdAt),
+			}))
+		)
+    } catch (error) {
+        next(error)
+    }
 }
 
 export const getMessagesAmount = async (req: Request, res: Response) => {
@@ -112,7 +152,6 @@ export const deleteMessage = async (req: Request, res: Response, next:NextFuncti
             res.json({message: "Invalid post id"})
             return
         }
-        console.log("postId:", postId)
     
         const post = await prisma.message.findUnique({
             where: {
