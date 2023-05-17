@@ -18,7 +18,10 @@ export const REFRESH_TOKEN_NAME = "refresh-token"
 
 
 export const setAccessToken = (res: Response ,user: UserPublic) => {
-    const {email, createdAt, ...payload} = user
+    const payload = {
+        ...user,
+        createdAt: Number(user.createdAt)
+    }
     const accessToken = jwt.sign(
 		{ sub: payload, iat: Date.now() },
 		JWT_ACCESS_KEY,

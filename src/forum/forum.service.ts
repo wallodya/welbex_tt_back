@@ -22,7 +22,7 @@ export const getMessages = async (req: Request, res: Response, next: NextFunctio
             skip,
             take,
             orderBy: {
-                createdAt: "asc"
+                createdAt: "desc"
             },
             select: {
                 uniqueMessageId: true,
@@ -31,16 +31,16 @@ export const getMessages = async (req: Request, res: Response, next: NextFunctio
                 createdAt: true,
                 author: {
                     select: {
-                        uuid: true
+                        uuid: true,
+                        login: true
                     }
                 }
             }
         })
-
+        console.log(posts)
         res.json(
 			posts.map(post => ({
 				...post,
-				author: post.author.uuid,
 				createdAt: Number(post.createdAt),
 			}))
 		)
@@ -90,13 +90,14 @@ export const createMessage = async (req: Request, res: Response, next: NextFunct
                 createdAt: true,
                 author: {
                     select: {
-                        uuid: true
+                        uuid: true,
+                        login: true
                     }
                 }
             }
         })
     
-        res.json({...post, author: post.author.uuid, createdAt: Number(post.createdAt)})
+        res.json({...post, createdAt: Number(post.createdAt)})
     } catch (error) {
         next(error)
     }
@@ -132,13 +133,14 @@ export const updateMessage = async (req: Request, res: Response, next: NextFunct
                 createdAt: true,
                 author: {
                     select: {
-                        uuid: true
+                        uuid: true,
+                        login: true
                     }
                 }
             }
         })
     
-        res.json({...post, author: post.author.uuid, createdAt: Number(post.createdAt)})
+        res.json({...post, createdAt: Number(post.createdAt)})
     } catch (error) {
         next(error)
     }
@@ -160,7 +162,8 @@ export const deleteMessage = async (req: Request, res: Response, next:NextFuncti
             select: {
                 author: {
                     select: {
-                        uuid: true
+                        uuid: true,
+                        login: true
                     }
                 }
             }
@@ -185,6 +188,7 @@ export const deleteMessage = async (req: Request, res: Response, next:NextFuncti
                 uniqueMessageId: postId
             },
             select: {
+                uniqueMessageId: true,
                 text: true,
                 mediaURL: true,
                 createdAt: true,
@@ -196,7 +200,7 @@ export const deleteMessage = async (req: Request, res: Response, next:NextFuncti
             }
         })
     
-        res.send({...deletedPost, author: deletedPost.author.uuid, createdAt: Number(deletedPost.createdAt)})
+        res.send({...deletedPost, createdAt: Number(deletedPost.createdAt)})
     } catch (error) {
         next(error)
     }
