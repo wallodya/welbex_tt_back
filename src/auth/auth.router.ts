@@ -1,5 +1,6 @@
-import express from "express"
+import express, { Request, Response } from "express"
 import { signIn, signOut, signUp } from "./auth.service"
+import expressAsyncHandler from "express-async-handler"
 const authRouter = express.Router()
 
 /**
@@ -7,9 +8,20 @@ const authRouter = express.Router()
  * @summary Summary of sign-in
  * @return {object} 200 - success response
  */
-authRouter.post("/sign-in", signIn)
+authRouter.post("/login", signIn)
 
-authRouter.post("/sign-up", signUp)
+const wait: () => Promise<void> = () => {
+    return new Promise<void>((resolve, reject): void => {
+        setTimeout(resolve, 2000)
+    })
+}
+const handler = async (req: Request, res: Response) => {
+    console.log("1")
+    await wait()
+}
+
+authRouter.post("/register", signUp)
+// authRouter.get("/abc", [handler])
 
 authRouter.delete("/sign-out", signOut)
 

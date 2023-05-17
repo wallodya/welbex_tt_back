@@ -1,10 +1,8 @@
-import express, { json, urlencoded } from "express"
 import cors from "cors"
-import { loggerMiddleware } from "./app.middleware"
-import { getUserMiddleware } from "../auth/auth.middleware"
-import swaggerUi from "swagger-ui-express"
-import swaggerJsDoc, { Options } from "swagger-jsdoc"
+import express, { json, urlencoded } from "express"
 import expressJSDocSwagger from "express-jsdoc-swagger"
+import { getUserMiddleware } from "../auth/auth.middleware"
+import { loggerMiddleware } from "./app.middleware"
 
 const swaggerOptions = {
     info: {
@@ -43,29 +41,6 @@ const swaggerOptions = {
       multiple: true,
 }
 
-// const swaggerOptions = {
-//     swaggerDefinition: {
-//         swagger: "2.0",
-//         info: {
-//             title: "WelbeX forum Express API documentation",
-//             version: "0.1.0",
-//         },
-//     },
-// 	definition: {
-// 		openapi: "3.1.0",
-// 		info: {
-// 			title: "WelbeX forum Express API documentation",
-// 			version: "0.1.0",
-// 		},
-// 		servers: [
-// 			{
-// 				url: "http://localhost:5000",
-// 			},
-// 		],
-// 	},
-// 	apis: ["./forum/*.controller.ts", "./auth/*.controller.ts"],
-// }
-
 const createExpressServer = () => {
 	const app = express()
 
@@ -73,16 +48,9 @@ const createExpressServer = () => {
 	app.use(urlencoded({ extended: true }))
 	app.use(json())
 
-    // const swaggerSpecs = swaggerJsDoc(swaggerOptions)
-    // app.use(
-	// 	"/api-docs",
-	// 	swaggerUi.serve,
-	// 	swaggerUi.setup(swaggerSpecs, { explorer: true })
-	// )
     expressJSDocSwagger(app)(swaggerOptions);
 
 	app.use(loggerMiddleware)
-	app.use(getUserMiddleware)
 
 	return app
 }

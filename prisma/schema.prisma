@@ -15,7 +15,7 @@ model Person {
 
   uuid     String @unique
   email    String @unique
-  login    String
+  login    String @unique
   password String
 
   tokens   Token[]   @relation("user_has_tokens")
