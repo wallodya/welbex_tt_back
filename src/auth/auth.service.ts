@@ -120,7 +120,6 @@ export const signOut = async (req: Request, res: Response) => {
         const decodedRefreshToken = decodeToken(refreshToken)
         if (decodedRefreshToken) {
             const { uuid } = decodedRefreshToken.sub
-            console.log("uuid from token: ", uuid)
             await removeRefreshToken(uuid)
         }
     }

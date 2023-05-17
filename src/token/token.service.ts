@@ -7,6 +7,10 @@ import { JwtToken, isJwtTokenType } from "./token.types"
 
 const JWT_ACCESS_KEY = process.env.JWT_ACCESS_KEY ?? "accesss-key"
 const JWT_REFRESH_KEY = process.env.JWT_REFRESH_KEY ?? "refresh-key"
+const DAY_MS = 1000 * 60 * 60 * 24
+const HOUR_MS = 60 * 60 * 1000
+const JWT_ACCESS_EXP_MS = HOUR_MS * 2
+const JWT_REFRESH_EXP_MS = DAY_MS * 20
 
 const refreshTokenTimers = new Map<string, NodeJS.Timeout>()
 
@@ -55,13 +59,11 @@ export const setRefreshToken = async (res: Response, user: UserPublic) => {
             }
         })
 
-        const DAY_MS = 1000 * 60 * 60 * 24
-
-        setRefreshTokenTimeout(token.user.uuid, DAY_MS * 20)
+        setRefreshTokenTimeout(token.user.uuid, JWT_REFRESH_EXP_MS)
 
         res.cookie(REFRESH_TOKEN_NAME, refreshToken, {
 			httpOnly: true,
-			maxAge: DAY_MS * 20,
+			maxAge: JWT_REFRESH_EXP_MS,
 		})
         return
     } catch (error) {
@@ -79,12 +81,60 @@ export const decodeToken = (token: string): JwtToken | null => {
     return null
 }
 
-export const validateAccessToken = (token: string) => {
+export const validateAccessToken = (token: string): boolean => {
+    const decoded = decodeToken(token)
 
+    if (!isJwtTokenType(decoded)) {
+        console.log("Not jwt type: ", decoded)
+        return false
+    }
+
+    const currentTime = Date.now()
+    if (decoded.iat < currentTime - JWT_ACCESS_EXP_MS) {
+        console.log("outdated")
+        return false
+    }
+
+    return true
 }
 
 export const validateRefreshToken = async (token: string) => {
+    const decoded = decodeToken(token)
 
+    if (!isJwtTokenType(decoded)) {
+        console.log("Not jwt type: ", decoded)
+        return false
+    }
+
+    const currentTime = Date.now()
+    if (decoded.iat < currentTime - JWT_REFRESH_EXP_MS) {
+        console.log("outdated")
+        return false
+    }
+
+    const { uuid } = decoded.sub
+
+    const tokenFromDB = await prisma.token.findMany({
+        where: {
+            user: {
+                uuid
+            }
+        },
+        select: {
+            refresh_token: true
+        }
+    })
+
+    if (!tokenFromDB.length) {
+        console.log("token does not exist")
+        return false
+    }
+
+    const isValid = tokenFromDB.some(async (data) => {
+        return await bcrypt.compare(data.refresh_token, token)
+    })
+
+    return isValid
 }
 
 const setRefreshTokenTimeout = (uuid: string, delay: number) => {

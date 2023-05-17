@@ -1,5 +1,6 @@
 import express from "express"
 import { createMessage, deleteMessage, getMessages, getMessagesAmount, updateMessage } from "./forum.service"
+import { authGuard } from "../auth/auth.guard"
 
 const forumRouter = express.Router()
 
@@ -7,10 +8,11 @@ forumRouter.get("/", getMessages)
 
 forumRouter.get("/amount", getMessagesAmount)
 
-forumRouter.post("/", createMessage)
 
-forumRouter.put("/", updateMessage)
+forumRouter.post("/", [authGuard, createMessage])
 
-forumRouter.delete("/", deleteMessage)
+forumRouter.put("/", [authGuard, updateMessage])
+
+forumRouter.delete("/", [authGuard, deleteMessage])
 
 export default forumRouter
