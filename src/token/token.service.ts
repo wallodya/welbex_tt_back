@@ -81,35 +81,41 @@ export const decodeToken = (token: string): JwtToken | null => {
     return null
 }
 
-export const validateAccessToken = (token: string): boolean => {
+export const validateAccessToken = (token?: string): JwtToken | null => {
+    if (!token) {
+        return null
+    }
     const decoded = decodeToken(token)
 
     if (!isJwtTokenType(decoded)) {
         console.log("Not jwt type: ", decoded)
-        return false
+        return null
     }
 
     const currentTime = Date.now()
     if (decoded.iat < currentTime - JWT_ACCESS_EXP_MS) {
         console.log("outdated")
-        return false
+        return null
     }
 
-    return true
+    return decoded
 }
 
-export const validateRefreshToken = async (token: string) => {
+export const validateRefreshToken = async (token?: string): Promise<JwtToken | null> => {
+    if (!token) {
+        return null
+    }
     const decoded = decodeToken(token)
 
     if (!isJwtTokenType(decoded)) {
         console.log("Not jwt type: ", decoded)
-        return false
+        return null
     }
 
     const currentTime = Date.now()
     if (decoded.iat < currentTime - JWT_REFRESH_EXP_MS) {
         console.log("outdated")
-        return false
+        return null
     }
 
     const { uuid } = decoded.sub
@@ -127,14 +133,14 @@ export const validateRefreshToken = async (token: string) => {
 
     if (!tokenFromDB.length) {
         console.log("token does not exist")
-        return false
+        return null
     }
 
     const isValid = tokenFromDB.some(async (data) => {
         return await bcrypt.compare(data.refresh_token, token)
     })
 
-    return isValid
+    return isValid ? decoded : null
 }
 
 const setRefreshTokenTimeout = (uuid: string, delay: number) => {

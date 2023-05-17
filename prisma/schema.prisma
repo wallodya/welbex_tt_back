@@ -37,10 +37,11 @@ model Token {
 model Message {
   message_id Int @id @default(autoincrement())
 
-  author   Person  @relation(fields: [userId], references: [user_id], name: "user_has_messages", onDelete: Cascade)
-  userId   Int
-  text     String?
-  mediaURL String?
+  uniqueMessageId String  @unique
+  author          Person  @relation(fields: [userId], references: [user_id], name: "user_has_messages", onDelete: Cascade)
+  userId          Int
+  text            String?
+  mediaURL        String?
 
   createdAt BigInt
 }
