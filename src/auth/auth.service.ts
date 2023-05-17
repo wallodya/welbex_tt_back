@@ -1,18 +1,61 @@
 import { NextFunction, Request, Response } from "express";
-import { userSchema } from "./user.schema";
+import { createAccountSchema, signInSchema } from "./user.schema";
 import { randomUUID } from "crypto";
 import * as bcrypt from "bcrypt"
 import { prisma } from "../prisma";
-import { setAccessToken } from "../token/token.service";
+import { REFRESH_TOKEN_NAME, decodeToken, removeRefreshToken, setAccessToken } from "../token/token.service";
 import { setRefreshToken } from "../token/token.service";
 
-export const signIn = async (req: Request, res: Response) => {
-    res.send("sign-in")
+export const signIn = async (req: Request, res: Response, next: NextFunction) => {
+    try {        
+        const userData = signInSchema.safeParse(req.body)
+        if (!userData.success) {
+            res.statusCode = 400
+            res.json({ message: "User object is not valid"})
+            return
+        }
+    
+        const {
+            data: { login, password },
+        } = userData
+    
+        
+        const user = await prisma.person.findFirst({
+            where: {
+                login,
+            }
+        })
+
+        if (!user) {
+            res.statusCode = 400
+            res.json({ message: "Incorrect login" })
+            return
+        }
+
+        const isPasswordCorrect = await bcrypt.compare(password, user.password)
+
+        if (!isPasswordCorrect) {
+            res.statusCode = 400
+            res.json({ message: "Wrong password"})
+            return
+        }
+
+        const {password: _, user_id, ...userPublic} = user
+    
+        setAccessToken(res, userPublic)
+        await setRefreshToken(res, userPublic)
+
+
+        res.json({ ...userPublic, createdAt: Number(user.createdAt) })
+        return
+    } catch (error) {
+        next(error)
+    }
 }
 
 export const signUp = async function (req: Request, res: Response, next: NextFunction) {
     try {
-        const userData = userSchema.safeParse(req.body)
+        const userData = createAccountSchema.safeParse(req.body)
         if (!userData.success) {
             res.statusCode = 400
             res.json({ message: "User object is not valid"})
@@ -68,6 +111,18 @@ export const signUp = async function (req: Request, res: Response, next: NextFun
     }
 }
 
-export const signOut = (req: Request, res: Response) => {
-    return res.send("sign-out")
+export const signOut = async (req: Request, res: Response) => {
+    const refreshToken = req.headers.cookie?.replace("refresh-token=", "")
+
+    res.setHeader("authorization", "")
+    res.cookie(REFRESH_TOKEN_NAME, "")
+    if (refreshToken) {
+        const decodedRefreshToken = decodeToken(refreshToken)
+        if (decodedRefreshToken) {
+            const { uuid } = decodedRefreshToken.sub
+            console.log("uuid from token: ", uuid)
+            await removeRefreshToken(uuid)
+        }
+    }
+    res.sendStatus(200)
 }

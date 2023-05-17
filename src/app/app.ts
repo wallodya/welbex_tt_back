@@ -3,6 +3,7 @@ import express, { json, urlencoded } from "express"
 import expressJSDocSwagger from "express-jsdoc-swagger"
 import { getUserMiddleware } from "../auth/auth.middleware"
 import { loggerMiddleware } from "./app.middleware"
+import cookieParser from "cookie-parser"
 
 const swaggerOptions = {
     info: {
@@ -47,6 +48,7 @@ const createExpressServer = () => {
 	app.use(cors())
 	app.use(urlencoded({ extended: true }))
 	app.use(json())
+    app.use(cookieParser())
 
     expressJSDocSwagger(app)(swaggerOptions);
 

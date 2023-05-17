@@ -3,28 +3,40 @@ import { Response } from "express"
 import jwt from "jsonwebtoken"
 import * as bcrypt from "bcrypt"
 import { prisma } from "../prisma"
+import { JwtToken, isJwtTokenType } from "./token.types"
 
 const JWT_ACCESS_KEY = process.env.JWT_ACCESS_KEY ?? "accesss-key"
 const JWT_REFRESH_KEY = process.env.JWT_REFRESH_KEY ?? "refresh-key"
 
+const refreshTokenTimers = new Map<string, NodeJS.Timeout>()
+
 export const REFRESH_TOKEN_NAME = "refresh-token"
+
 
 export const setAccessToken = (res: Response ,user: UserPublic) => {
     const {email, createdAt, ...payload} = user
-    const accessToken = jwt.sign(payload, JWT_ACCESS_KEY, { expiresIn: "2h" })
+    const accessToken = jwt.sign(
+		{ sub: payload, iat: Date.now() },
+		JWT_ACCESS_KEY,
+		{ expiresIn: "2h" }
+	)
 
-    res.setHeader("authentication", accessToken)
+    res.setHeader("authorization", accessToken)
 
     return
 }
 
 export const setRefreshToken = async (res: Response, user: UserPublic) => {
     const {email, createdAt, ...payload} = user
-    const refreshToken = jwt.sign(payload, JWT_REFRESH_KEY, { expiresIn: "10d"})
+    const refreshToken = jwt.sign(
+		{ sub: payload, iat: Date.now() },
+		JWT_REFRESH_KEY,
+		{ expiresIn: "10d" }
+	)
 
     try {
         const hashedToken =  await bcrypt.hash(refreshToken, 5)
-        await prisma.token.create({
+        const token = await prisma.token.create({
             data: {
                 refresh_token: hashedToken,
                 user: {
@@ -33,10 +45,19 @@ export const setRefreshToken = async (res: Response, user: UserPublic) => {
                     }
                 },
                 createdAt: Date.now()
+            },
+            select: {
+                user: {
+                    select: {
+                        uuid: true
+                    }
+                }
             }
         })
 
         const DAY_MS = 1000 * 60 * 60 * 24
+
+        setRefreshTokenTimeout(token.user.uuid, DAY_MS * 20)
 
         res.cookie(REFRESH_TOKEN_NAME, refreshToken, {
 			httpOnly: true,
@@ -50,12 +71,12 @@ export const setRefreshToken = async (res: Response, user: UserPublic) => {
 
 }
 
-export const removeRefreshToken = async (token: string) => {
-
-}
-
-export const decodeAccessToken = (token: string) => {
-
+export const decodeToken = (token: string): JwtToken | null => {
+    const decoded = jwt.decode(token)
+    if (isJwtTokenType(decoded)) {
+        return decoded
+    }
+    return null
 }
 
 export const validateAccessToken = (token: string) => {
@@ -64,4 +85,32 @@ export const validateAccessToken = (token: string) => {
 
 export const validateRefreshToken = async (token: string) => {
 
+}
+
+const setRefreshTokenTimeout = (uuid: string, delay: number) => {
+    const timeout = setTimeout(async () => {
+        await removeRefreshToken(uuid)
+    }, delay )
+    refreshTokenTimers.set(uuid, timeout)
+}
+
+export const removeRefreshToken = async (uuid: string) => {
+    try {
+        await prisma.token.deleteMany({
+            where: {
+                user: {
+                    uuid
+                }
+            }
+        })
+        if (refreshTokenTimers.has(uuid)) {
+            const timeout = refreshTokenTimers.get(uuid)
+            clearTimeout(timeout)
+            refreshTokenTimers.delete(uuid)
+        } else {
+            console.log("could not delete token")
+        }
+    } catch (error) {
+        console.log("Error while removing RT timeout: ", error)
+    }
 }

@@ -10,18 +10,7 @@ const authRouter = express.Router()
  */
 authRouter.post("/login", signIn)
 
-const wait: () => Promise<void> = () => {
-    return new Promise<void>((resolve, reject): void => {
-        setTimeout(resolve, 2000)
-    })
-}
-const handler = async (req: Request, res: Response) => {
-    console.log("1")
-    await wait()
-}
-
 authRouter.post("/register", signUp)
-// authRouter.get("/abc", [handler])
 
 authRouter.delete("/sign-out", signOut)
 
