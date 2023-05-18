@@ -37,7 +37,7 @@ export const getMessages = async (req: Request, res: Response, next: NextFunctio
                 }
             }
         })
-        console.log(posts)
+
         res.json(
 			posts.map(post => ({
 				...post,
@@ -56,6 +56,15 @@ export const getMessagesAmount = async (req: Request, res: Response) => {
 
 export const createMessage = async (req: Request, res: Response, next: NextFunction) => {
     try {        
+        console.log("req.file: ")
+        console.dir( req.file)
+        console.log("req.files: ")
+        console.dir( req.files)
+        console.log("req.body: ")
+        console.log(req.body)
+        if (req.file) {
+            console.log("exists")
+        }
         const postBody = postSchema.safeParse(req.body)
         const user = (req as UserRequest).user
         if (!postBody.success) {
@@ -65,7 +74,7 @@ export const createMessage = async (req: Request, res: Response, next: NextFunct
         }
         
         if (user.uuid !== postBody.data.authorId) {        
-            res.statusCode = 400
+            res.statusCode = 403
             res.json("You are not the author")
             return
         }
@@ -80,7 +89,7 @@ export const createMessage = async (req: Request, res: Response, next: NextFunct
                 },
                 uniqueMessageId: postId,
                 text: postBody.data.text,
-                mediaURL: postBody.data.mediaURL,
+                // mediaURL: postBody.data.mediaURL,
                 createdAt: Date.now()
             },
             select: {
@@ -113,7 +122,7 @@ export const updateMessage = async (req: Request, res: Response, next: NextFunct
         }
         
         if (user.uuid !== postBody.data.authorId) {        
-            res.statusCode = 400
+            res.statusCode = 403
             res.json("You are not the author")
             return
         }

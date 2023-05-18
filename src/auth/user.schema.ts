@@ -22,3 +22,6 @@ export const signInSchema = z.object({
 		.min(4, { message: "Password must be at least 4 letter long" })
 		.max(20, { message: "Password can be at most 20 letter long" }),
 })
+
+export type SignInSchema = z.infer<typeof signInSchema>
+export type CereateAccountSchema = z.infer<typeof createAccountSchema>
