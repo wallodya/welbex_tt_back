@@ -7,7 +7,7 @@ import { UserPublic, UserRequest } from "../types/types";
 export const authGuard = async (req: Request, res: Response, next: NextFunction) => {
     const accessToken = req.headers.authorization
 
-    console.log("auth guard")
+    console.log(">>>auth guard")
 
     const decodedAccessToken = validateAccessToken(accessToken)
     if (accessToken && decodedAccessToken) {
@@ -17,14 +17,12 @@ export const authGuard = async (req: Request, res: Response, next: NextFunction)
             return
         }
         setAccessToken(res, user)
-        setRefreshToken(res, user)
         next()
         return
     }
 
     const refreshToken = req.headers.cookie?.replace("refresh-token=", "")
-    console.log("cookie")
-    console.log( req.headers["set-cookie"])
+
     if (!refreshToken) {
         res.setHeader("authorization", "")
         console.log("RT not set")
@@ -50,9 +48,8 @@ export const authGuard = async (req: Request, res: Response, next: NextFunction)
         next()
         return
     }
-
+    console.log(">>>User authorized")
     setAccessToken(res, user)
-    setRefreshToken(res, user)
 
     next()
 }

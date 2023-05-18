@@ -36,13 +36,13 @@ const createExpressServer = () => {
 			allowedHeaders: ["authorization", "set-cookie", "content-type"],
 		})
 	)
+    app.use("/media", express.static("public/uploads"))
 	app.use(urlencoded({ extended: true }))
 	app.use(json())
     app.use(cookieParser())
     app.use(bodyParser.json())
     app.use(fileUpload({
         parseNested: true,
-        createParentPath: true,
     }))
 
     expressJSDocSwagger(app)(swaggerOptions);

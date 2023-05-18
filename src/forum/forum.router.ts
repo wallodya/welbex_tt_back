@@ -5,6 +5,7 @@ import {
 	getMessages,
 	getMessagesAmount,
 	updateMessage,
+    uploadFile,
 } from "./forum.service"
 import { authGuard } from "../auth/auth.guard"
 import fileUpload from "express-fileupload"
@@ -195,5 +196,7 @@ forumRouter.patch("/", [authGuard, updateMessage])
  * }
  */
 forumRouter.delete("/", [authGuard, deleteMessage])
+
+forumRouter.post("/file", [authGuard, uploadFile])
 
 export default forumRouter

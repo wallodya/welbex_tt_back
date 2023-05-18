@@ -56,12 +56,6 @@ export const getMessagesAmount = async (req: Request, res: Response) => {
 
 export const createMessage = async (req: Request, res: Response, next: NextFunction) => {
     try {        
-        console.log("req.file: ")
-        console.dir( req.file)
-        console.log("req.files: ")
-        console.dir( req.files)
-        console.log("req.body: ")
-        console.log(req.body)
         if (req.file) {
             console.log("exists")
         }
@@ -210,6 +204,54 @@ export const deleteMessage = async (req: Request, res: Response, next:NextFuncti
         })
     
         res.send({...deletedPost, createdAt: Number(deletedPost.createdAt)})
+    } catch (error) {
+        next(error)
+    }
+}
+
+export const uploadFile = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const fileData = req.files
+        const postId = req.body.postId
+        if (!fileData || !fileData["media"]) {
+			res.statusCode = 400
+			res.json({ message: "file was not provided" })
+			return
+		}
+
+        const file = fileData["media"]
+
+        if (Array.isArray(file)) {
+			res.statusCode = 400
+			res.json({ message: "Can only upload signle file" })
+			return
+		}
+
+        const path = "public/uploads/" + file.name
+
+        await file.mv(path)
+
+        const postWithFile = await prisma.message.update({
+            where:{
+                uniqueMessageId: postId
+            },
+            data: {
+                mediaURL: "media/" + file.name
+            },
+            select: {
+                uniqueMessageId: true,
+                text: true,
+                mediaURL: true,
+                createdAt: true,
+                author: {
+                    select: {
+                        uuid: true
+                    }
+                }
+            }
+        })
+
+        res.json({...postWithFile, createdAt: Number(postWithFile.createdAt)})
     } catch (error) {
         next(error)
     }
