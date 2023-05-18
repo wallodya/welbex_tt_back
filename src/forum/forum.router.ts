@@ -125,7 +125,7 @@ forumRouter.get("/amount", getMessagesAmount)
  *      "message": "You are not the author"
  * }
 */
-forumRouter.post("/", [authGuard, fileUpload(), createMessage])
+forumRouter.post("/", [authGuard, createMessage])
 
 /**
  * PATCH /forum/

@@ -67,10 +67,12 @@ export const setRefreshToken = async (res: Response, user: UserPublic) => {
         res.cookie(REFRESH_TOKEN_NAME, refreshToken, {
 			httpOnly: true,
 			maxAge: JWT_REFRESH_EXP_MS,
+            secure: false,
+            sameSite: "none",
 		})
         return
     } catch (error) {
-        console.log("Error while creating refresh token")
+        console.log("Error while creating refresh token: ",error)
         return
     }
 

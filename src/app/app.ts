@@ -5,11 +5,12 @@ import { getUserMiddleware } from "../auth/auth.middleware"
 import { loggerMiddleware } from "./app.middleware"
 import cookieParser from "cookie-parser"
 import bodyParser from "body-parser"
+import fileUpload from "express-fileupload"
 
 const swaggerOptions = {
 	info: {
 		version: "1.0.0",
-		title: "Weblex forum api docs",
+		title: "Welbex forum api docs",
 		description: "Test task for Weblex interview",
 
 	},
@@ -32,12 +33,17 @@ const createExpressServer = () => {
 			origin: ["http://localhost:5173"],
 			methods: ["GET", "POST", "PATCH", "DELETE"],
 			exposedHeaders: ["authorization", "set-cookie"],
+			allowedHeaders: ["authorization", "set-cookie", "content-type"],
 		})
 	)
 	app.use(urlencoded({ extended: true }))
 	app.use(json())
     app.use(cookieParser())
     app.use(bodyParser.json())
+    app.use(fileUpload({
+        parseNested: true,
+        createParentPath: true,
+    }))
 
     expressJSDocSwagger(app)(swaggerOptions);
 
