@@ -33,8 +33,14 @@ const forumRouter = express.Router()
  * Create message (post) request body
  * @typedef {object} CreatePostBody
  * @property {string} text - Text content of the new post (optional)
- * @property {string} media - Media content (WIP) (optional)
  * @property {string} authorId - Unique id of the post author
+ */
+
+/**
+ * Add file message (post) request body
+ * @typedef {object} AddFileBody
+ * @property {string} media - Media content (as form data)
+ * @property {string} postId - Unique id of the post
  */
 
 /**
@@ -197,6 +203,33 @@ forumRouter.patch("/", [authGuard, updateMessage])
  */
 forumRouter.delete("/", [authGuard, deleteMessage])
 
+/**
+ * POST /forum/file
+ * @tags Forum
+ * @summary Add file to an existing post
+ * @param {AddFileBody} request.body.required - Unique id of the post to delete
+ * @return {Post} 200 - Returns post with file
+ * @return 400 - Bad request response
+ * @example response - 200 - Example success response
+ * {
+ *       "uniqueMessageId": "bb061d57-551d-4289-b36e-c315040b0d4e",
+ *       "text": "Fake post 10",
+ *       "mediaURL": null,
+ *       "createdAt": 1684348104151,
+ *       "author": {
+ *           "uuid": "f83f27d4-9468-4344-ae61-797e5de4baab",
+ *           "login": "FakeUser3"
+ *       }
+ * }
+ * @example response - 400 - Bad request response if file was nnot porvided
+ * {
+ *      "message": "file was not provided"
+ * }
+ * @example response - 400 - Bad request response if user tries to upload multiple files
+ * {
+ *      "message": "Can only upload signle file"
+ * }
+ */
 forumRouter.post("/file", [authGuard, uploadFile])
 
 export default forumRouter
